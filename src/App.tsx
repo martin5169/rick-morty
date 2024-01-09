@@ -1,38 +1,28 @@
 import { useState, useEffect } from "react";
 import "./App.css";
-import {
-  MDBCard,
-  MDBRow,
-  MDBCol,
-  MDBCardImage,
-  MDBCardBody,
-  MDBCardTitle,
-  MDBCardText,
-  MDBProgress,
-  MDBProgressBar,
-  MDBBtn,
-  MDBInput 
-} from "mdb-react-ui-kit";
-
-import titulo from "/ttile.png"
+import { MDBInput } from "mdb-react-ui-kit";
+import titulo from "/ttile.png";
 import logo from "/rm.png";
 import next from "/icons8-next-48.png";
 import previous from "/icons8-previous-48.png";
+import CharacterCard from "./CharacterCard";
+import notFound from "/notFound.png";
 
 interface Character {
   id: number;
   name: string;
-  species: string,
-  type: string,
-  gender: string,
-  status: string,
+  species: string;
+  type: string;
+  gender: string;
+  status: string;
   location: {
     name: string;
-  },
+  };
   origin: {
     name: string;
   };
-  image:string,
+  image: string;
+  episode: [];
 }
 
 function App() {
@@ -41,6 +31,7 @@ function App() {
   const [buscado, setBuscado] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchCharacters = async (page: number) => {
     try {
@@ -48,17 +39,21 @@ function App() {
       setError(null);
 
       const start = (page - 1) * 28 + 1;
-      const characterIds = Array.from({ length: 28 }, (_, index) => start + index);
-      const url = `https://rickandmortyapi.com/api/character/${characterIds.join(",")}`;
+      const characterIds = Array.from(
+        { length: 28 },
+        (_, index) => start + index
+      );
+      const url = `https://rickandmortyapi.com/api/character/${characterIds.join(
+        ","
+      )}`;
 
       const response = await fetch(url);
-
+      
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
 
       const data: Character[] = await response.json();
-
       setListadoPersonajes(data);
       setCurrentPage(page);
     } catch (error) {
@@ -87,15 +82,25 @@ function App() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`https://rickandmortyapi.com/api/character/?name=${searchQuery}`);
+      setIsModalOpen(false);
+      const response = await fetch(
+        `https://rickandmortyapi.com/api/character/?name=${searchQuery}`
+      );
+  
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
+  
+      const data: { results: Character[]; error?: string } = await response.json();
+  
+      if (data.error) {
+        setListadoPersonajes([]);
+      } else if (data.results.length === 0) {
+        setListadoPersonajes([]);
+      } else {
 
-      const data: { results: Character[] } = await response.json();
-
-      setListadoPersonajes(data.results);
-      setBuscado(searchQuery);
+        setListadoPersonajes(data.results || []);
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
       setError("Error fetching data. Please try again.");
@@ -104,65 +109,42 @@ function App() {
     }
   };
 
-
-  return (
-    <div className="contenedor">
-      <div>
-        <img src={logo} style={{ maxWidth: "210px" }} alt="" />
-        
-        <img src={titulo} style={{ maxWidth: "640px" }} alt="" />
-      </div>
-
-      <div className="page-buttons">
-        <button onClick={handlePrevPage} disabled={currentPage === 1}>
-          <img src={previous} alt="" />
-        </button>
-        <MDBInput label='Busca tu personaje favorito' type='text' id='formWhite' contrast onChange={(e) => handleSearch(e.target.value)} value={buscado}/>
-        <button onClick={handleNextPage}>
-        <img src={next} alt="" />
-        </button>
-      </div>
-
-      <div className="listado">
-      {loading && <p>Buscando personajes..</p>}
-        {error && <p>{error}</p>}
-        {listadoPersonajes.length>0 && listadoPersonajes.map((p) => (
-          <MDBCard
-          key={p.id}
-          alignment='center'
-          >
-                <MDBCardImage
-                  src={p.image}
-                  alt={p.name}
-                />
-         
-               <MDBCardBody>
-                  <MDBCardTitle>{p.name}</MDBCardTitle>
-                  <MDBCardText>
-                    <small className="text-muted">Status</small>
-                    <MDBProgress>
-                      <MDBProgressBar
-                        bgColor={p.status === "Alive" ? "success" : "danger"}
-                        striped
-                        animated
-                        width="100"
-                        valuemin={0}
-                        valuemax={100}
-                      />
-                    </MDBProgress>
-                
-                 
-                </MDBCardText>
-                <MDBBtn outline className='mx-2' color='dark'>
-          INFO
-      </MDBBtn>
-                </MDBCardBody>
-            
-          </MDBCard>
-        ))}
-      </div>
+return (
+  <div className="contenedor">
+    <div>
+      <img src={logo} style={{ maxWidth: "210px" }} alt="" />
+      <img src={titulo} style={{ maxWidth: "640px" }} alt="" />
     </div>
-  );
+
+    <div className="page-buttons">
+      <button onClick={handlePrevPage} disabled={currentPage === 1}>
+        <img src={previous} alt="" />
+      </button>
+      <button onClick={() => fetchCharacters(1)}>VER TODOS</button>
+      <MDBInput
+        label="Busca tu personaje favorito"
+        type="text"
+        id="formWhite"
+        contrast
+        onChange={(e) => setBuscado(e.target.value)}
+        value={buscado}
+      />
+      <button onClick={() => handleSearch(buscado)}>BUSCAR</button>
+      <button onClick={handleNextPage}>
+        <img src={next} alt="" />
+      </button>
+    </div>
+
+    <div className="listado">
+      {error && <img src={notFound} alt="" className="nf"/>}
+      {!error && listadoPersonajes.length > 0 ? (
+        listadoPersonajes.map((p) => (
+          <CharacterCard key={p.id} character={p} />
+        ))
+      ) : null}
+    </div>
+  </div>
+);
 }
 
 export default App;

@@ -28,9 +28,8 @@ body {
   min-width: 320px;
   min-height: 100vh;
   font-family: Roboto, Helvetica, Arial, sans-serif;
-  background-image: url("/wallp.jpg");
-  background-size: cover;
-  background-position: center;
+  background-color: #3f3a3a;
+  color: rgba(62, 54, 54, 0.87);
 
   }
 
