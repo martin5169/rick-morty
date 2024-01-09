@@ -28,7 +28,13 @@ interface Character {
   episode : []
 }
 
-function CharacterCard({ character, onClose }: { character: Character; onClose: () => void }) {
+
+interface ModalCardProps {
+  character: Character;
+  onClose: () => void;
+}
+
+function CharacterCard({ character }: { character: Character;}) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleOpenModal = () => {
@@ -37,7 +43,7 @@ function CharacterCard({ character, onClose }: { character: Character; onClose: 
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    onClose();
+   
   };
 
   return (

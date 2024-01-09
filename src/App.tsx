@@ -29,13 +29,12 @@ function App() {
   const [listadoPersonajes, setListadoPersonajes] = useState<Character[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [buscado, setBuscado] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchCharacters = async (page: number) => {
+    setBuscado("")
     try {
-      setLoading(true);
       setError(null);
 
       const start = (page - 1) * 28 + 1;
@@ -48,7 +47,7 @@ function App() {
       )}`;
 
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
@@ -59,8 +58,6 @@ function App() {
     } catch (error) {
       console.error("Error fetching data:", error);
       setError("Error fetching data. Please try again.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -80,71 +77,72 @@ function App() {
 
   const handleSearch = async (searchQuery: string) => {
     try {
-      setLoading(true);
       setError(null);
       setIsModalOpen(false);
       const response = await fetch(
         `https://rickandmortyapi.com/api/character/?name=${searchQuery}`
       );
-  
+
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
-  
-      const data: { results: Character[]; error?: string } = await response.json();
-  
+
+      const data: { results: Character[]; error?: string } =
+        await response.json();
+
       if (data.error) {
         setListadoPersonajes([]);
       } else if (data.results.length === 0) {
         setListadoPersonajes([]);
       } else {
-
         setListadoPersonajes(data.results || []);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
       setError("Error fetching data. Please try again.");
-    } finally {
-      setLoading(false);
     }
   };
 
-return (
-  <div className="contenedor">
-    <div>
-      <img src={logo} style={{ maxWidth: "210px" }} alt="" />
-      <img src={titulo} style={{ maxWidth: "640px" }} alt="" />
-    </div>
+  return (
+    <div className="contenedor">
+      <div>
+        <img src={logo} style={{ maxWidth: "210px" }} alt="" />
+        <img src={titulo} style={{ maxWidth: "640px" }} alt="" />
+      </div>
 
-    <div className="page-buttons">
-      <button onClick={handlePrevPage} disabled={currentPage === 1}>
-        <img src={previous} alt="" />
-      </button>
-      <button onClick={() => fetchCharacters(1)}>VER TODOS</button>
-      <MDBInput
-        label="Busca tu personaje favorito"
-        type="text"
-        id="formWhite"
-        contrast
-        onChange={(e) => setBuscado(e.target.value)}
-        value={buscado}
-      />
-      <button onClick={() => handleSearch(buscado)}>BUSCAR</button>
-      <button onClick={handleNextPage}>
-        <img src={next} alt="" />
-      </button>
-    </div>
+      <div className="page-buttons">
+        <button onClick={handlePrevPage} disabled={currentPage === 1}>
+          <img src={previous} alt="" />
+        </button>
+        <button onClick={() => fetchCharacters(1)}>VER TODOS</button>
+        <MDBInput
+          label="Busca tu personaje favorito"
+          type="text"
+          id="formWhite"
+          contrast
+          onChange={(e) => setBuscado(e.target.value)}
+          value={buscado}
+        />
+        <button onClick={() => handleSearch(buscado)}>BUSCAR</button>
+        <button onClick={handleNextPage}>
+          <img src={next} alt="" />
+        </button>
+      </div>
 
-    <div className="listado">
-      {error && <img src={notFound} alt="" className="nf"/>}
-      {!error && listadoPersonajes.length > 0 ? (
-        listadoPersonajes.map((p) => (
-          <CharacterCard key={p.id} character={p} />
-        ))
-      ) : null}
+      <div className="listado">
+        {!error && listadoPersonajes.length > 0 ? (
+          listadoPersonajes.map((p) => (
+            <CharacterCard key={p.id} character={p} />
+          ))
+        ) : (
+          <div className="notFound">
+            <h2>Lo siento, ese personaje no existe..</h2>
+
+            <img src={notFound} alt="" style={{ maxWidth: "650px" }} />
+          </div>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
 }
-
 export default App;
